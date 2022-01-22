@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo lib2ddoc</title>
+</head>
+
+<body>
+    <h1>Demo lib2ddoc</h1>
+    <h2>Charger une image</h2>
+    <h3>Depuis fichier</h3>
+    <input type="file" id="imageInput">
+
+    <h2>Image chargée:</h2>
+    <canvas id="canvas" style="max-width: 50vw;max-height: 50vh;"></canvas><br>
+    <button id="decodebutton">Decoder !</button>
+
+    <h2>Résultat</h2>
+    <pre id="code"></pre>
+
+    <script>
+        const imageInput = document.querySelector('#imageInput'),
+            decodeButton = document.querySelector('#decodebutton'),
+            canvas = document.querySelector('#canvas'),
+            code = document.querySelector('#code');
+
+        imageInput.onchange = function(){
+            const img = new Image();
+
+            img.onload = function(){
+                var canvas = document.getElementById('canvas');
+                canvas.width = this.width;
+                canvas.height = this.height;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(this, 0, 0);
+            }
+
+            img.onerror = function(){
+                console.error("The provided file couldn't be loaded as an Image media");
+            }
+
+            img.src = URL.createObjectURL(this.files[0]);
+        };
+
+        decodeButton.onclick = function(){
+            const image = canvas.toDataURL();
+            console.log(image);
+
+            code.innerHTML = 'Loading...';
+
+            //Send the request, put result in page's content
+            fetch("/decode", {
+                "method": "POST",
+                "headers": {
+                    "Content-Type": "application/octet-stream"
+                },
+                "body": image
+            })
+            .then(res => res.text())
+            .then(json => {
+                code.innerHTML = json;
+                console.log(json);
+            })
+            .catch(err => {
+                console.error(err);
+            });
+        };
+    </script>
+</body>
+
+</html>
